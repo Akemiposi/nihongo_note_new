@@ -22,6 +22,34 @@ h3 {
 #teacherGreeting {
   margin-bottom: 15px;
 }
+#studentSelect {
+  display: block;
+  width: 100%;
+  max-width: 700px;
+  padding: 12px;
+  margin: 20px auto;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #fff;
+  color: #666;
+  appearance: none;
+  box-sizing: border-box;
+}
+
+.student-section {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  margin: 20px auto;
+  max-width: 700px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.entry {
+  padding: 10px 0;
+}
 
 #studentPosts {
   background-color: #ffffff;

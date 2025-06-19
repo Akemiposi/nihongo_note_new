@@ -57,8 +57,11 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
   const teacherUid = pairSnap.val();
-  const chatRoomId = `${uid}_${teacherUid}`;
-  const chatRef = ref(db, `chats/${chatRoomId}/messages`);
+  const chatRoomId = `${uid}_${teacherUid}`;//ルーム名作成
+
+  console.log("チャットルームID:", chatRoomId);
+
+  const chatRef = ref(db, `chats/${chatRoomId}/messages`);//参照生成
 
   document.getElementById("diaryForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -87,8 +90,8 @@ onAuthStateChanged(auth, async (user) => {
 
       console.log("送信データ:", data);
 
-    const newPostRef = push(chatRef);
-    await set(newPostRef, data);
+    const newPostRef = push(chatRef);//自動でmessages下に新しいIDを生成
+    await set(newPostRef, data);//そのIDにデータを書き込む
 
     form.reset();
     await loadDiaryEntries(chatRef);

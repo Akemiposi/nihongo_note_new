@@ -9,7 +9,7 @@ import {
   signOut,
   setPersistence,
   browserSessionPersistence,
-  onAuthStateChanged
+  onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-auth.js";
 
 // Firebase Realtime Database関連
@@ -62,53 +62,20 @@ async function translateWithGemini(text, sourceLang, targetLang = "ja") {
     return text;
   }
 }
+// HTML要素取得
+const studentSelect = document.getElementById("studentSelect");
 
-// Firebase Authenticationでログイン状態を監視
+// Firebase認証後の処理
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    // 未ログインならログインページへリダイレクト
     window.location.href = "index.html";
     return;
   }
 
-  // ユーザー（講師）のUIDを取得
   const teacherUid = user.uid;
   const dbRef = ref(db);
 
-  // 講師名を取得
-  const nameSnap = await get(child(dbRef, `users/${teacherUid}/name`));
-  const teacherName = nameSnap.exists() ? nameSnap.val() : "講師";
-
-  // 講師名を表示
-  document.getElementById(
-    "teacherGreeting"
-  ).textContent = `こんにちは、${teacherName}先生`;
-
-  // 生徒と講師の割り当て（pairs）を取得
-  const pairsSnap = await get(child(dbRef, "pairs"));
-  if (!pairsSnap.exists()) {
-    console.log("pairs が存在しません");
-    return;
-  }
-
-  const pairs = pairsSnap.val();
-
-  // 担当している生徒のUIDを抽出
-  const myStudents = Object.entries(pairs)
-    .filter(
-      ([studentUid, assignedTeacherUid]) => assignedTeacherUid === teacherUid
-    )
-    .map(([studentUid]) => studentUid);
-
-  console.log("担当生徒一覧:", myStudents);
-
-  // 担当生徒の投稿を取得・表示
-  await getStudentPosts(teacherUid);
-});
-
-// 担当生徒の投稿を取得する関数
-async function getStudentPosts(teacherUid) {
-  const dbRef = ref(db);
+  // pairs取得 & 生徒セレクトボックス作成
   const pairsSnap = await get(child(dbRef, "pairs"));
   if (!pairsSnap.exists()) return;
 
@@ -119,85 +86,112 @@ async function getStudentPosts(teacherUid) {
     )
     .map(([studentUid]) => studentUid);
 
-  const postsDiv = document.getElementById("studentPosts");
-  postsDiv.innerHTML = ""; // 画面をクリア
+  const studentSelect = document.getElementById("studentSelect");
+  studentSelect.innerHTML = "";
 
   for (const studentUid of myStudents) {
-    // 生徒の名前を取得
-    const studentNameSnap = await get(child(dbRef, `users/${studentUid}/name`));
-    const studentName = studentNameSnap.exists()
-      ? studentNameSnap.val()
-      : "生徒";
+    const nameSnap = await get(child(dbRef, `users/${studentUid}/name`));
+    const studentName = nameSnap.exists() ? nameSnap.val() : "生徒";
+    const option = document.createElement("option");
+    option.value = studentUid;
+    option.textContent = studentName;
+    studentSelect.appendChild(option);
+  }
 
-    // チャットルームIDとメッセージを取得
-    const chatRoomId = `${studentUid}_${teacherUid}`;
-    const chatRef = ref(db, `chats/${chatRoomId}/messages`);
-    const snapshot = await get(chatRef);
-    const data = snapshot.val();
+  // 講師名の表示
+  const nameSnap = await get(child(dbRef, `users/${teacherUid}/name`));
+  const teacherName = nameSnap.exists() ? nameSnap.val() : "講師";
+  document.getElementById(
+    "teacherGreeting"
+  ).textContent = `こんにちは、${teacherName}先生`;
 
-    if (data) {
-      const section = document.createElement("div");
-      section.innerHTML = `<h4>${studentName}さんの記録</h4>`;
+  // 最初の生徒を表示
+  if (myStudents.length > 0) {
+    loadStudentPosts(myStudents[0], teacherUid);
+  }
 
-      const entries = Object.entries(data).reverse();
+  // 生徒切り替え時のイベントリスナー
+  studentSelect.addEventListener("change", (e) => {
+    const selectedStudent = e.target.value;
+    loadStudentPosts(selectedStudent, teacherUid);
+  });
+});
 
-      for (const [msgId, msg] of entries) {
-        const entry = document.createElement("div");
-        entry.className = "entry";
+// 選択された生徒の投稿を取得して表示する関数
+async function loadStudentPosts(studentUid, teacherUid) {
+  const dbRef = ref(db);
+  const postsDiv = document.getElementById("studentPosts");
+  postsDiv.innerHTML = "";
 
-        // 🟡 翻訳処理（msg.languageが"ja"以外なら翻訳）
-        let translatedMemo = msg.memo;
-        if (msg.language && msg.language !== "ja") {
-          translatedMemo = await translateWithGemini(
-            msg.memo,
-            msg.language,
-            "ja"
-          );
-        }
+  const studentNameSnap = await get(child(dbRef, `users/${studentUid}/name`));
+  const studentName = studentNameSnap.exists() ? studentNameSnap.val() : "生徒";
 
-        // 🔵 表示部分
-        let content = `
-      📅 ${msg.date}<br>
-      ことば：${msg.kotoba}<br>
-      ぶん：${msg.bun}<br>
-      かんじ：${msg.kanji}<br>
-      言語：${msg.language ?? "不明"}<br>
-      メモ（原文）：${msg.memo}<br>
-      メモ（翻訳）：<span style="color:blue;">${translatedMemo}</span><br>
-    `;
+  const chatRoomId = `${studentUid}_${teacherUid}`;
+  const chatRef = ref(db, `chats/${chatRoomId}/messages`);
+  const snapshot = await get(chatRef);
+  const data = snapshot.val();
 
-        // 🟢 アドバイス入力欄（生徒からの投稿のみ）
-        if (msg.sender === "student") {
-          content += `
-    <span style="color: green;">🧑‍🏫 アドバイス（日本語）：${
-      msg.adviceOriginal ?? "（まだありません）"
-    }</span><br>
-    <span style="color: green;">🧑‍🏫 アドバイス（翻訳）：${
-      msg.advice ?? "（まだありません）"
-    }</span><br>
-    <label>アドバイス：
-      <input type="text" data-chatid="${chatRoomId}" data-msgid="${msgId}" class="adviceInput">
-    </label><br>
-    <button class="sendAdvice" data-chatid="${chatRoomId}" data-msgid="${msgId}">
-      送信
-    </button>
-  `;
-        } else if (msg.sender === "teacher") {
-          content += `
-    <span style="color: green;">🧑‍🏫 アドバイス（日本語）：${
-      msg.adviceOriginal ?? "（まだありません）"
-    }</span><br>
-    <span style="color: green;">🧑‍🏫 アドバイス（翻訳）：${
-      msg.advice ?? "（まだありません）"
-    }</span>
-  `;
-        }
-        entry.innerHTML = content + "<hr>";
-        section.appendChild(entry);
+  if (data) {
+    const section = document.createElement("div");
+    section.className = "student-section";
+    section.innerHTML = `<h4>${studentName}さんの記録</h4>`;
+
+    const entries = Object.entries(data).reverse();
+
+    for (const [msgId, msg] of entries) {
+      const entry = document.createElement("div");
+      entry.className = "entry";
+
+      let translatedMemo = msg.memo;
+      if (msg.language && msg.language !== "ja") {
+        translatedMemo = await translateWithGemini(
+          msg.memo,
+          msg.language,
+          "ja"
+        );
       }
 
-      postsDiv.appendChild(section);
+      let content = `
+        📅 ${msg.date}<br>
+        ことば：${msg.kotoba}<br>
+        ぶん：${msg.bun}<br>
+        かんじ：${msg.kanji}<br>
+        言語：${msg.language ?? "不明"}<br>
+        メモ（原文）：${msg.memo}<br>
+        メモ（翻訳）：<span style="color:blue;">${translatedMemo}</span><br>
+      `;
+
+      if (msg.sender === "student") {
+        content += `
+          <span style="color: green;">🧑‍🏫 アドバイス（日本語）：${
+            msg.adviceOriginal ?? "（まだありません）"
+          }</span><br>
+          <span style="color: green;">🧑‍🏫 アドバイス（翻訳）：${
+            msg.advice ?? "（まだありません）"
+          }</span><br>
+          <label>アドバイス：
+            <input type="text" data-chatid="${chatRoomId}" data-msgid="${msgId}" class="adviceInput">
+          </label><br>
+          <button class="sendAdvice" data-chatid="${chatRoomId}" data-msgid="${msgId}">
+            送信
+          </button>
+        `;
+      } else if (msg.sender === "teacher") {
+        content += `
+          <span style="color: green;">🧑‍🏫 アドバイス（日本語）：${
+            msg.adviceOriginal ?? "（まだありません）"
+          }</span><br>
+          <span style="color: green;">🧑‍🏫 アドバイス（翻訳）：${
+            msg.advice ?? "（まだありません）"
+          }</span>
+        `;
+      }
+
+      entry.innerHTML = content + "<hr>";
+      section.appendChild(entry);
     }
+
+    postsDiv.appendChild(section);
   }
 }
 
