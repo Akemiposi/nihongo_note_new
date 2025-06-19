@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>にほんごノート｜ログイン</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="stylesheet" href="css/index.css" />
+  </head>
+  <body>
+    <div class="login-container">
+      <h1>にほんごノート</h1>
+      <p class="subtitle">ログインしてはじめましょう</p>
+
+      <div class="login-card">
+        <!-- Googleログインボタン -->
+        <button id="googleLogin" class="google-btn">
+          <img
+            src="https://developers.google.com/identity/images/g-logo.png"
+            alt="Google logo"
+            class="google-icon"
+          />
+          Googleでログイン
+        </button>
+
+        <div class="divider">または</div>
+
+        <!-- メールログインフォーム -->
+        <form id="emailLoginForm">
+          <input
+            type="email"
+            id="email"
+            placeholder="メールアドレス"
+            required
+          />
+          <input
+            type="password"
+            id="password"
+            placeholder="パスワード"
+            required
+          />
+          <input type="text" id="name" placeholder="名前" required />
+
+          <select id="roleSelect" required>
+            <option value="">あなたは生徒ですか、講師ですか？</option>
+            <option value="student">生徒</option>
+            <option value="teacher">講師</option>
+          </select>
+
+          <button type="submit" class="login-btn">メールでログイン</button>
+        </form>
+      </div>
+    </div>
+
+    <script type="module" src="js/login.js"></script>
+  </body>
+</html>

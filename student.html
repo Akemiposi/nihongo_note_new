@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>にほんごノート（student）</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="stylesheet" href="css/reset.css" />
+    <link rel="stylesheet" href="css/student.css" />
+  </head>
+  <body>
+    <h1>Student</h1>
+    <h2 id="studentGreeting"></h2>
+
+    <form id="diaryForm">
+      <label>日付 <input type="date" name="date" required /></label>
+      <label>ことば <input type="text" name="kotoba" required /></label>
+      <label>ぶん <input type="text" name="bun" required /></label>
+      <label>かんじ <input type="text" name="kanji" /></label>
+      <label for="language">
+        あなたの言語を選んでください（Please select your language）： </label
+      >
+      <select name="language" id="language" required>
+        <option value="" disabled selected>言語を選択してください</option>
+        <option value="ja">日本語</option>
+        <option value="en">English</option>
+        <option value="zh">中文 (Chinese)</option>
+        <option value="vi">Tiếng Việt (Vietnamese)</option>
+        <option value="tl">Filipino (Tagalog)</option>
+        <option value="ne">नेपाली (Nepali)</option>
+        <option value="my">မြန်မာစာ (Burmese)</option>
+        <option value="mn">Монгол (Mongolian)</option>
+        <option value="uz">O‘zbekcha (Uzbek)</option></select
+      ><br />
+      <label>メモ <textarea name="memo"></textarea></label>
+      <button type="submit">送信</button>
+    </form>
+
+    <h3>これまでのやりとり</h3>
+    <div id="diaryList"></div>
+    <button id="logoutBtn">ログアウト</button>
+
+    <script type="module" src="./js/student.js"></script>
+  </body>
+</html>

@@ -1,0 +1,5 @@
+# Firebase 設定ファイルを無視
+js/firebaseConfig.js
+
+# 翻訳API 設定ファイルを無視
+js/translationConfig.js
