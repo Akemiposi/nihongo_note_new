@@ -1,4 +1,4 @@
-console.log("✅ student.js 読み込み成功");
+console.log("student.js 読み込み成功");
 // Firebase初期化
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
 import {
@@ -83,7 +83,7 @@ onAuthStateChanged(auth, async (user) => {
       bun: form.bun.value,
       kanji: form.kanji.value,
       memo: form.memo.value,
-      language: selectedLanguage, // ← formからではなく getElementById() で取得
+      language: selectedLanguage, //←formからではなく getElementById() で取得
       sender: "student",
       timestamp: new Date().toISOString(),
     };
